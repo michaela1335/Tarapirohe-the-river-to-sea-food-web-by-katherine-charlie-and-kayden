@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <title>Tarapirohe: The River-to-Sea Food Web</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+ <style>
+ /* Custom Typography & Animations */
+ body {
+ font-family: 'Nunito', sans-serif;
+ overflow: hidden;
+ user-select: none;
+ -webkit-user-select: none;
+ touch-action: none;
+ background-color: #0c4a6e;
+ }
+ h1, h2, h3, .font-display {
+ font-family: 'Fredoka', sans-serif;
+ }
+
+ /* Instructions Slide & Zoom Animation */
+ @keyframes slideZoomIn {
+ 0% {
+ opacity: 0;
+ transform: translateX(110%) scale(0.75);
+ }
+ 70% {
+ opacity: 1;
+ transform: translateX(-3%) scale(1.02);
+ }
+ 100% {
+ opacity: 1;
+ transform: translateX(0) scale(1);
+ }
+ }
+ .animate-instructions {
+ animation: slideZoomIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
+ opacity: 0;
+ }
+
+ /* Gentle Floating & Bobbing Animations */
+ @keyframes floatSlow {
+ 0%, 100% { transform: translateY(0px); }
+ 50% { transform: translateY(-6px); }
+ }
+ .animate-float {
+ animation: floatSlow 3s ease-in-out infinite;
+ }
+
+ /* Game Button Styling */
+ .btn-game {
+ transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+ box-shadow: 0 5px 0 #065f46, 0 8px 15px rgba(0, 0, 0, 0.25);
+ }
+ .btn-game:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 7px 0 #065f46, 0 12px 20px rgba(0, 0, 0, 0.3);
+ }
+ .btn-game:active {
+ transform: translateY(3px);
+ box-shadow: 0 2px 0 #065f46, 0 4px 8px rgba(0, 0, 0, 0.2);
+ }
+
+ /* Custom Scrollbar for Summary */
+ ::-webkit-scrollbar {
+ width: 6px;
+ }
+ ::-webkit-scrollbar-track {
+ background: rgba(255,255,255,0.2);
+ border-radius: 10px;
+ }
+ ::-webkit-scrollbar-thumb {
+ background: rgba(14, 116, 144, 0.5);
+ border-radius: 10px;
+ }
+ </style>
+</head>
+<body class="w-screen h-screen relative overflow-hidden bg-sky-900">
+
+ <!-- Full-Screen Interactive Game Canvas -->
+ <canvas id="gameCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+ <!-- Top Sound Toggle (Always Accessible) -->
+ <button id="muteBtn" aria-label="Toggle Sound" class="fixed top-3 right-3 z-50 bg-white/90 hover:bg-white text-sky-900 p-2.5 rounded-full shadow-lg border-2 border-sky-200 transition transform hover:scale-105 active:scale-95">
+ <svg id="soundOnIcon" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+ </svg>
+ <svg id="soundOffIcon" class="w-6 h-6 hidden text-rose-600" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+ </svg>
+ </button>
+
+ <!-- ========================================== -->
+ <!-- 1. OPENING PAGE OVERLAY -->
+ <!-- ========================================== -->
+ <div id="openingScreen" class="fixed inset-0 z-40 flex flex-col lg:flex-row items-center justify-between p-4 sm:p-8 lg:p-12 bg-gradient-to-b from-sky-950/45 via-sky-900/35 to-slate-950/60 backdrop-blur-[2px] overflow-y-auto">
+ 
+ <!-- Left Side: Title, Credits & Visitor Name Input -->
+ <div class="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl my-auto">
+ <!-- Designer Credit Pill -->
+ <div class="inline-flex items-center gap-2 bg-amber-100/95 text-amber-950 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold shadow-md border-2 border-amber-300 mb-3">
+ <span>🌿 Designed by Katherine, Kayden & Charlie</span>
+ <span class="opacity-60">•</span>
+ <span>24/11/26</span>
+ </div>
+
+ <!-- Main Game Title -->
+ <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.65)] leading-tight mb-3">
+ Tarapirohe:<br>
+ <span class="text-amber-300">The River-to-Sea</span> Food Web
+ </h1>
+
+ <p class="text-sky-50 text-base sm:text-lg font-semibold drop-shadow mb-6 max-w-md">
+ Help the endangered New Zealand black-fronted tern feed its hungry chicks from the braided river to the coastal sea!
+ </p>
+
+ <!-- Visitor Name Input Card -->
+ <div class="w-full max-w-md bg-white/95 backdrop-blur-md p-5 rounded-3xl shadow-2xl border-4 border-sky-200">
+ <label for="playerNameInput" class="block font-display text-lg sm:text-xl font-bold text-sky-950 mb-2 tracking-wide">
+ NAME:
+ </label>
+ <input 
+ type="text" 
+ id="playerNameInput" 
+ maxlength="18"
+ placeholder="Type your name here..." 
+ class="w-full px-4 py-3 text-lg font-bold text-slate-800 bg-sky-50 border-2 border-sky-300 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 transition placeholder:text-slate-400"
+ />
+ <p id="nameHint" class="text-xs font-bold text-slate-500 mt-2">
+ Enter your name so we can record your Ranger score!
+ </p>
+
+ <!-- Prominent Start Button -->
+ <button id="startBtn" class="btn-game mt-4 w-full py-4 px-6 bg-gradient-to-b from-emerald-400 to-emerald-600 text-white font-display text-2xl font-bold rounded-2xl tracking-wider uppercase flex items-center justify-center gap-3 cursor-pointer">
+ <span>START GAME</span>
+ <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+ </svg>
+ </button>
+ </div>
+ </div>
+
+ <!-- Right Side: Instructions Panel (Zooms/Slides in from the side) -->
+ <div class="w-full lg:w-5/12 max-w-lg mt-6 lg:mt-0 my-auto animate-instructions">
+ <div class="bg-amber-50/95 backdrop-blur-md rounded-3xl p-5 sm:p-7 shadow-2xl border-4 border-amber-300 relative">
+ <!-- Decorative Pin / Badge -->
+ <div class="absolute -top-4 left-6 bg-sky-600 text-white font-display font-bold px-4 py-1 rounded-full text-sm shadow-md border-2 border-white">
+ HOW TO PLAY
+ </div>
+
+ <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-800 mt-1 mb-4 flex items-center gap-2">
+ <span>🦅</span> Your Mission
+ </h2>
+
+ <div class="space-y-3.5 text-slate-700 font-bold text-sm sm:text-base">
+ <div class="flex items-start gap-3 bg-white p-3 rounded-2xl border border-amber-200 shadow-sm">
+ <span class="text-2xl shrink-0">👆</span>
+ <p><span class="text-sky-700 font-extrabold">Grab & Drop:</span> Drag food from the braided river and ocean up to the hungry Tarapirohe chicks in the shingle nest.</p>
+ </div>
+
+ <div class="flex items-start gap-3 bg-emerald-50 p-3 rounded-2xl border border-emerald-200 shadow-sm">
+ <span class="text-2xl shrink-0">🐟</span>
+ <p><span class="text-emerald-700 font-extrabold">Healthy Native Prey (+100 pts):</span> Catch mayflies, earthworms, skinks, whitebait (īnanga), and ocean krill!</p>
+ </div>
+
+ <div class="flex items-start gap-3 bg-rose-50 p-3 rounded-2xl border border-rose-200 shadow-sm">
+ <span class="text-2xl shrink-0">⚠️</span>
+ <p><span class="text-rose-700 font-extrabold">Avoid Hazards (-50 pts):</span> Watch out for plastic rubbish and predators like stoats or spiky pufferfish.</p>
+ </div>
+
+ <div class="flex items-start gap-3 bg-amber-100/70 p-3 rounded-2xl border border-amber-300 shadow-sm">
+ <span class="text-2xl shrink-0">⏱️</span>
+ <p><span class="text-amber-900 font-extrabold">Survival:</span> Keep the chicks' hunger meter full until the 60-second timer finishes!</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ========================================== -->
+ <!-- 2. IN-GAME HUD (HEADS-UP DISPLAY) -->
+ <!-- ========================================== -->
+ <div id="gameHud" class="fixed top-0 left-0 right-14 z-30 p-2.5 sm:p-4 pointer-events-none hidden">
+ <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+ 
+ <!-- Player Name & Score Pill -->
+ <div class="flex items-center gap-3 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border-2 border-sky-200">
+ <div class="bg-sky-100 text-sky-800 px-2.5 py-1 rounded-xl font-extrabold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[160px]" id="hudPlayerName">
+ Ranger
+ </div>
+ <div class="flex items-center gap-1.5">
+ <span class="text-lg">⭐</span>
+ <span class="font-display text-xl sm:text-2xl font-bold text-slate-800" id="hudScore">0</span>
+ </div>
+ </div>
+
+ <!-- Chick Survival / Hunger Meter -->
+ <div class="flex-1 min-w-[180px] max-w-xs bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border-2 border-amber-200">
+ <div class="flex justify-between items-center text-xs font-extrabold text-slate-700 mb-1">
+ <span>🐣 CHICK SURVIVAL</span>
+ <span id="hungerPercentText">100%</span>
+ </div>
+ <div class="w-full h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
+ <div id="hungerBar" class="h-full bg-gradient-to-r from-emerald-400 to-lime-500 rounded-full transition-all duration-200" style="width: 100%;"></div>
+ </div>
+ </div>
+
+ <!-- Timer Pill -->
+ <div class="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border-2 border-sky-200">
+ <span class="text-lg">⏳</span>
+ <span class="font-display text-xl sm:text-2xl font-bold text-sky-900" id="hudTimer">60s</span>
+ </div>
+ </div>
+ </div>
+
+ <!-- ========================================== -->
+ <!-- 3. END / GAME OVER SUMMARY MODAL -->
+ <!-- ========================================== -->
+ <div id="endScreen" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+ <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border-4 border-amber-300 text-center relative max-h-[92vh] flex flex-col">
+ 
+ <div id="endBadge" class="inline-block mx-auto bg-emerald-100 text-emerald-800 font-extrabold px-4 py-1 rounded-full text-xs sm:text-sm mb-2 border border-emerald-300">
+ FOOD WEB COMPLETE!
+ </div>
+
+ <h2 id="endTitle" class="font-display text-3xl sm:text-4xl font-bold text-slate-800 mb-1">
+ Ka pai, Ranger!
+ </h2>
+ <p id="endSubtitle" class="text-slate-600 font-bold text-sm sm:text-base mb-4">
+ You kept the Tarapirohe chicks healthy and fed!
+ </p>
+
+ <!-- Big Score Box -->
+ <div class="bg-gradient-to-r from-sky-50 to-emerald-50 rounded-2xl p-4 border-2 border-sky-200 mb-4 flex items-center justify-around">
+ <div>
+ <div class="text-xs font-extrabold text-slate-500 uppercase">Final Score</div>
+ <div id="finalScore" class="font-display text-3xl sm:text-4xl font-bold text-emerald-600">0</div>
+ </div>
+ <div class="h-10 w-0.5 bg-sky-200"></div>
+ <div>
+ <div class="text-xs font-extrabold text-slate-500 uppercase">Prey Delivered</div>
+ <div id="finalCount" class="font-display text-3xl sm:text-4xl font-bold text-sky-700">0</div>
+ </div>
+ </div>
+
+ <!-- Educational Food Web Breakdown -->
+ <div class="text-left flex-1 overflow-y-auto bg-amber-50/80 rounded-2xl p-4 border-2 border-amber-200 mb-5">
+ <h3 class="font-display font-bold text-amber-950 text-base sm:text-lg mb-2 flex items-center gap-2">
+ <span>📋</span> River-to-Sea Diet Summary:
+ </h3>
+ <div id="dietSummaryList" class="space-y-2 text-sm font-bold text-slate-700">
+ <!-- Populated dynamically via JS -->
+ </div>
+ </div>
+
+ <!-- Play Again Button -->
+ <button id="playAgainBtn" class="btn-game w-full py-3.5 px-6 bg-gradient-to-b from-emerald-400 to-emerald-600 text-white font-display text-xl sm:text-2xl font-bold rounded-2xl uppercase tracking-wide cursor-pointer">
+ 🔄 Play Again
+ </button>
+ </div>
+ </div>
+
+ <script>
+ /**
+ * TARAPIROHE: THE RIVER-TO-SEA FOOD WEB
+ * Designed by Katherine, Kayden & Charlie (24/11/26)
+ * Interactive Canvas + Web Audio API Educational Game
+ */
+
+ // ==========================================
+ // 1. WEB AUDIO SOUND SYNTHESIZER (NO EXTERNAL FILES)
+ // ==========================================
+ class SoundManager {
+ constructor() {
+ this.ctx = null;
+ this.muted = false;
+ }
+
+ init() {
+ if (!this.ctx) {
+ const AudioCtx = window.AudioContext || window.webkitAudioContext;
+ this.ctx = new AudioCtx();
+ }
+ if (this.ctx.state === 'suspended') {
+ this.ctx.resume();
+ }
+ }
+
+ toggleMute() {
+ this.muted = !this.muted;
+ document.getElementById('soundOnIcon').classList.toggle('hidden', this.muted);
+ document.getElementById('soundOffIcon').classList.toggle('hidden', !this.muted);
+ }
+
+ playGrab() {
+ if (this.muted) return;
+ this.init();
+ const now = this.ctx.currentTime;
+ const osc = this.ctx.createOscillator();
+ const gain = this.ctx.createGain();
+ osc.type = 'sine';
+ osc.frequency.setValueAtTime(320, now);
+ osc.frequency.exponentialRampToValueAtTime(580, now + 0.12);
+ gain.gain.setValueAtTime(0.18, now);
+ gain.gain.exponentialRampToValueAtTime(0.01, now + 0.13);
+ osc.connect(gain);
+ gain.connect(this.ctx.destination);
+ osc.start(now);
+ osc.stop(now + 0.13);
+ }
+
+ playFeedChirp() {
+ if (this.muted) return;
+ this.init();
+ const now = this.ctx.currentTime;
+ // Double cheerful tern chick chirp
+ [0, 0.11].forEach((offset, idx) => {
+ const osc = this.ctx.createOscillator();
+ const gain = this.ctx.createGain();
+ osc.type = 'triangle';
+ const startFreq = idx === 0 ? 780 : 940;
+ osc.frequency.setValueAtTime(startFreq, now + offset);
+ osc.frequency.exponentialRampToValueAtTime(startFreq * 1.35, now + offset + 0.09);
+ gain.gain.setValueAtTime(0.22, now + offset);
+ gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.1);
+ osc.connect(gain);
+ gain.connect(this.ctx.destination);
+ osc.start(now + offset);
+ osc.stop(now + offset + 0.1);
+ });
+ }
+
+ playHazardBuzz() {
+ if (this.muted) return;
+ this.init();
+ const now = this.ctx.currentTime;
+ const osc = this.ctx.createOscillator();
+ const gain = this.ctx.createGain();
+ osc.type = 'sawtooth';
+ osc.frequency.setValueAtTime(165, now);
+ osc.frequency.linearRampToValueAtTime(110, now + 0.28);
+ gain.gain.setValueAtTime(0.2, now);
+ gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+ osc.connect(gain);
+ gain.connect(this.ctx.destination);
+ osc.start(now);
+ osc.stop(now + 0.3);
+ }
+ }
+
+ const sfx = new SoundManager();
+
+ // ==========================================
+ // 2. ECOLOGICAL DATA (RIVER-TO-SEA SPECIES)
+ // ==========================================
+ const SPECIES_CATALOG = [
+ // Healthy Prey - Riverbank & Braided River
+ {
+ id: 'mayfly',
+ name: 'Mayfly (Piriwai)',
+ zone: 'river',
+ isFood: true,
+ points: 100,
+ hungerRestore: 14,
+ fact: 'River insect! Tarapirohe catch mayflies skimming over braided rivers.',
+ color: '#eab308',
+ radius: 26
+ },
+ {
+ id: 'caddisfly',
+ name: 'Caddisfly Larva',
+ zone: 'river',
+ isFood: true,
+ points: 100,
+ hungerRestore: 14,
+ fact: 'Clean river indicator! Found around smooth shingle river stones.',
+ color: '#84cc16',
+ radius: 26
+ },
+ {
+ id: 'earthworm',
+ name: 'Earthworm (Noke)',
+ zone: 'bank',
+ isFood: true,
+ points: 100,
+ hungerRestore: 15,
+ fact: 'Riverbank snack! Tarapirohe forage on nearby damp pasture & riverbanks.',
+ color: '#f472b6',
+ radius: 27
+ },
+ {
+ id: 'skink',
+ name: 'Native Skink (Mokopāpā)',
+ zone: 'bank',
+ isFood: true,
+ points: 120,
+ hungerRestore: 18,
+ fact: 'High-energy meal from the warm gravel riverbeds!',
+ color: '#a16207',
+ radius: 28
+ },
+ // Healthy Prey - River-to-Sea & Ocean
+ {
+ id: 'whitebait',
+ name: 'Whitebait / Īnanga',
+ zone: 'estuary',
+ isFood: true,
+ points: 110,
+ hungerRestore: 16,
+ fact: 'Migrates between the sea and braided rivers—a favourite fish!',
+ color: '#38bdf8',
+ radius: 28
+ },
+ {
+ id: 'krill',
+ name: 'Coastal Krill (Kōuraura)',
+ zone: 'ocean',
+ isFood: true,
+ points: 100,
+ hungerRestore: 14,
+ fact: 'Ocean feast! Tarapirohe fly out to the coast in winter & spring to eat krill.',
+ color: '#fb7185',
+ radius: 25
+ },
+ {
+ id: 'smelt',
+ name: 'Coastal Smelt (Paraki)',
+ zone: 'ocean',
+ isFood: true,
+ points: 110,
+ hungerRestore: 16,
+ fact: 'Small silvery coastal fish swooped from the ocean surface.',
+ color: '#94a3b8',
+ radius: 28
+ },
+ // Hazards - Pollution & Predators
+ {
+ id: 'plastic',
+ name: 'Plastic Bottle Cap',
+ zone: 'any_water',
+ isFood: false,
+ points: -50,
+ hungerDamage: 12,
+ fact: 'Not food! Plastic rubbish washes down rivers and harms seabirds.',
+ color: '#ef4444',
+ radius: 26
+ },
+ {
+ id: 'stoat',
+ name: 'Introduced Stoat',
+ zone: 'bank',
+ isFood: false,
+ points: -60,
+ hungerDamage: 16,
+ fact: 'Danger! Stoats are major predators of Tarapirohe eggs and chicks.',
+ color: '#78350f',
+ radius: 30
+ },
+ {
+ id: 'puffer',
+ name: 'Spiky Pufferfish',
+ zone: 'ocean',
+ isFood: false,
+ points: -50,
+ hungerDamage: 12,
+ fact: 'Too spiky & toxic! Leave pufferfish in the sea.',
+ color: '#f97316',
+ radius: 28
+ }
+ ];
+
+ // ==========================================
+ // 3. GAME STATE & CANVAS SETUP
+ // ==========================================
+ const canvas = document.getElementById('gameCanvas');
+ const ctx = canvas.getContext('2d');
+
+ let width = window.innerWidth;
+ let height = window.innerHeight;
+
+ const state = {
+ mode: 'OPENING', // OPENING, PLAYING, ENDED
+ playerName: 'Ranger',
+ score: 0,
+ timeLeft: 60,
+ hunger: 100,
+ entities: [],
+ particles: [],
+ floatingPopups: [],
+ eatenCounts: {},
+ draggedEntity: null,
+ pointer: { x: width * 0.5, y: height * 0.3, active: false },
+ ternBird: {
+ x: width * 0.5,
+ y: height * 0.25,
+ targetX: width * 0.5,
+ targetY: height * 0.25,
+ wingPhase: 0,
+ facing: 1
+ },
+ nest: {
+ x: width * 0.5,
+ y: height * 0.26,
+ radius: 68,
+ chickBounce: 0
+ },
+ waveTime: 0,
+ lastSpawnTime: 0,
+ lastTickTime: 0,
+ shingleStones: []
+ };
+
+ // Generate decorative river shingle pebbles once
+ function generateShingle() {
+ state.shingleStones = [];
+ const colors = ['#94a3b8', '#cbd5e1', '#64748b', '#a8a29e', '#d6d3d1'];
+ for (let i = 0; i < 65; i++) {
+ state.shingleStones.push({
+ rx: Math.random(),
+ ry: Math.random(),
+ size: 4 + Math.random() * 10,
+ color: colors[Math.floor(Math.random() * colors.length)],
+ rot: Math.random() * Math.PI
+ });
+ }
+ }
+
+ function resizeCanvas() {
+ width = window.innerWidth;
+ height = window.innerHeight;
+ canvas.width = width;
+ canvas.height = height;
+
+ // Update Nest Position (Top-center gravel island / bank)
+ state.nest.x = width * 0.5;
+ state.nest.y = Math.max(135, height * 0.27);
+ state.nest.radius = Math.min(75, Math.max(52, width * 0.08));
+ }
+
+ window.addEventListener('resize', resizeCanvas);
+ generateShingle();
+ resizeCanvas();
+
+ // ==========================================
+ // 4. ENTITY SPAWNING & MANAGEMENT
+ // ==========================================
+ function spawnEntity() {
+ // Keep max 9 items on screen for clean playability
+ if (state.entities.length >= 9) return;
+
+ // 72% chance of healthy prey, 28% chance of hazard
+ const wantFood = Math.random() < 0.72;
+ const pool = SPECIES_CATALOG.filter(s => s.isFood === wantFood);
+ const template = pool[Math.floor(Math.random() * pool.length)];
+
+ const waterTop = height * 0.44;
+ const bankBottom = height * 0.54;
+ const fromLeft = Math.random() < 0.5;
+ let x = fromLeft ? -40 : width + 40;
+ let y = waterTop + 40;
+
+ // Assign vertical lane based on natural habitat zone (Left = River, Right = Ocean)
+ if (template.zone === 'bank') {
+ y = waterTop + Math.random() * (bankBottom - waterTop);
+ } else if (template.zone === 'river') {
+ x = fromLeft ? -30 : width * 0.55;
+ y = bankBottom + 25 + Math.random() * (height - bankBottom - 65);
+ } else if (template.zone === 'ocean') {
+ x = fromLeft ? width * 0.45 : width + 30;
+ y = bankBottom + 25 + Math.random() * (height - bankBottom - 65);
+ } else {
+ y = bankBottom + 20 + Math.random() * (height - bankBottom - 60);
+ }
+
+ const speed = (55 + Math.random() * 55) * (fromLeft ? 1 : -1);
+
+ state.entities.push({
+ ...template,
+ uid: Math.random().toString(36).slice(2),
+ x,
+ y,
+ vx: speed,
+ bobOffset: Math.random() * Math.PI * 2,
+ isDragging: false
+ });
+ }
+
+ function addFloatingPopup(x, y, title, subtitle, isGood) {
+ state.floatingPopups.push({
+ x: Math.min(Math.max(x, 120), width - 120),
+ y: Math.min(Math.max(y, 95), height - 60),
+ title,
+ subtitle,
+ isGood,
+ life: 2.3,
+ maxLife: 2.3
+ });
+ }
+
+ function addBurstParticles(x, y, color) {
+ for (let i = 0; i < 14; i++) {
+ const angle = (Math.PI * 2 * i) / 14;
+ const spd = 60 + Math.random() * 110;
+ state.particles.push({
+ x,
+ y,
+ vx: Math.cos(angle) * spd,
+ vy: Math.sin(angle) * spd,
+ color,
+ size: 4 + Math.random() * 4,
+ life: 0.65
+ });
+ }
+ }
+
+ // ==========================================
+ // 5. INPUT HANDLING (MOUSE & TOUCH DRAG-DROP)
+ // ==========================================
+ function getPointerPos(e) {
+ if (e.touches && e.touches.length > 0) {
+ return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+ }
+ return { x: e.clientX, y: e.clientY };
+ }
+
+ function handlePointerDown(e) {
+ if (state.mode !== 'PLAYING') return;
+ const pos = getPointerPos(e);
+ state.pointer.x = pos.x;
+ state.pointer.y = pos.y;
+ state.pointer.active = true;
+
+ // Swoop Tarapirohe bird toward tap/click
+ state.ternBird.targetX = pos.x;
+ state.ternBird.targetY = pos.y;
+
+ // Find closest entity within generous touch radius
+ let closest = null;
+ let bestDist = 62;
+ for (let i = state.entities.length - 1; i >= 0; i--) {
+ const ent = state.entities[i];
+ const d = Math.hypot(ent.x - pos.x, ent.y - pos.y);
+ if (d < bestDist) {
+ bestDist = d;
+ closest = ent;
+ }
+ }
+
+ if (closest) {
+ closest.isDragging = true;
+ state.draggedEntity = closest;
+ sfx.playGrab();
+ addBurstParticles(closest.x, closest.y, '#e0f2fe');
+ }
+ }
+
+ function handlePointerMove(e) {
+ if (state.mode !== 'PLAYING') return;
+ const pos = getPointerPos(e);
+ state.pointer.x = pos.x;
+ state.pointer.y = pos.y;
+
+ if (state.draggedEntity) {
+ state.draggedEntity.x = pos.x;
+ state.draggedEntity.y = pos.y;
+ state.ternBird.targetX = pos.x;
+ state.ternBird.targetY = pos.y - 26;
+ }
+ }
+
+ function handlePointerUp() {
+ if (state.mode !== 'PLAYING') return;
+ state.pointer.active = false;
+
+ if (state.draggedEntity) {
+ const ent = state.draggedEntity;
+ ent.isDragging = false;
+ state.draggedEntity = null;
+
+ // Check if dropped onto the Tarapirohe Nest!
+ const distToNest = Math.hypot(ent.x - state.nest.x, ent.y - state.nest.y);
+ if (distToNest <= state.nest.radius + 45) {
+ evaluateDropAtNest(ent);
+ }
+ }
+ }
+
+ function evaluateDropAtNest(ent) {
+ // Remove entity from world
+ state.entities = state.entities.filter(item => item.uid !== ent.uid);
+
+ if (ent.isFood) {
+ // Healthy Native Prey!
+ state.score += ent.points;
+ state.hunger = Math.min(100, state.hunger + ent.hungerRestore);
+ state.nest.chickBounce = 1.0;
+ state.eatenCounts[ent.name] = (state.eatenCounts[ent.name] || 0) + 1;
+
+ sfx.playFeedChirp();
+ addBurstParticles(state.nest.x, state.nest.y - 10, '#34d399');
+ addFloatingPopup(
+ state.nest.x,
+ state.nest.y - 65,
+ `+${ent.points} ${ent.name}!`,
+ ent.fact,
+ true
+ );
+ } else {
+ // Hazard / Rubbish / Predator!
+ state.score = Math.max(0, state.score + ent.points);
+ state.hunger = Math.max(0, state.hunger - ent.hungerDamage);
+
+ sfx.playHazardBuzz();
+ addBurstParticles(state.nest.x, state.nest.y - 10, '#f43f5e');
+ addFloatingPopup(
+ state.nest.x,
+ state.nest.y - 65,
+ `${ent.points} pts — ${ent.name}!`,
+ ent.fact,
+ false
+ );
+ }
+
+ updateHud();
+ }
+
+ canvas.addEventListener('mousedown', handlePointerDown);
+ window.addEventListener('mousemove', handlePointerMove);
+ window.addEventListener('mouseup', handlePointerUp);
+
+ canvas.addEventListener('touchstart', (e) => {
+ if (state.mode === 'PLAYING') e.preventDefault();
+ handlePointerDown(e);
+ }, { passive: false });
+ window.addEventListener('touchmove', (e) => {
+ if (state.mode === 'PLAYING') e.preventDefault();
+ handlePointerMove(e);
+ }, { passive: false });
+ window.addEventListener('touchend', handlePointerUp);
+
+ // ==========================================
+ // 6. CUSTOM VECTOR ILLUSTRATIONS ON CANVAS
+ // ==========================================
+ function drawHabitatBackground(dt) {
+ state.waveTime += dt;
+ const horizonY = height * 0.34;
+ const bankTopY = height * 0.21;
+ const waterStartY = height * 0.48;
+
+ // 1. Sky Gradient (Crisp Canterbury / South Island Blue)
+ const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+ skyGrad.addColorStop(0, '#0284c7');
+ skyGrad.addColorStop(0.65, '#7dd3fc');
+ skyGrad.addColorStop(1, '#e0f2fe');
+ ctx.fillStyle = skyGrad;
+ ctx.fillRect(0, 0, width, horizonY + 10);
+
+ // Soft Clouds
+ ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+ drawCloud(width * 0.16 + Math.sin(state.waveTime * 0.12) * 18, height * 0.09, 1.0);
+ drawCloud(width * 0.78 + Math.cos(state.waveTime * 0.1) * 20, height * 0.11, 1.15);
+
+ // 2. Southern Alps Mountains (Left / Inland) -> Coastal Horizon (Right / Sea)
+ ctx.fillStyle = '#64748b';
+ ctx.beginPath();
+ ctx.moveTo(0, horizonY);
+ ctx.lineTo(width * 0.06, horizonY - height * 0.19);
+ ctx.lineTo(width * 0.16, horizonY - height * 0.09);
+ ctx.lineTo(width * 0.27, horizonY - height * 0.22);
+ ctx.lineTo(width * 0.42, horizonY - height * 0.07);
+ ctx.lineTo(width * 0.56, horizonY);
+ ctx.closePath();
+ ctx.fill();
+
+ // Snow Caps on Mountains
+ ctx.fillStyle = '#f8fafc';
+ ctx.beginPath();
+ ctx.moveTo(width * 0.06, horizonY - height * 0.19);
+ ctx.lineTo(width * 0.025, horizonY - height * 0.12);
+ ctx.lineTo(width * 0.065, horizonY - height * 0.13);
+ ctx.lineTo(width * 0.095, horizonY - height * 0.12);
+ ctx.closePath();
+ ctx.fill();
+
+ ctx.beginPath();
+ ctx.moveTo(width * 0.27, horizonY - height * 0.22);
+ ctx.lineTo(width * 0.225, horizonY - height * 0.13);
+ ctx.lineTo(width * 0.27, horizonY - height * 0.15);
+ ctx.lineTo(width * 0.315, horizonY - height * 0.13);
+ ctx.closePath();
+ ctx.fill();
+
+ // Distant Sea Horizon on Right
+ ctx.fillStyle = '#0369a1';
+ ctx.fillRect(width * 0.54, horizonY - 10, width * 0.46, 22);
+
+ // 3. Braided Shingle / Gravel Riverbank (Nesting Habitat)
+ const bankGrad = ctx.createLinearGradient(0, bankTopY, 0, waterStartY + 25);
+ bankGrad.addColorStop(0, '#d6d3d1');
+ bankGrad.addColorStop(0.5, '#a8a29e');
+ bankGrad.addColorStop(1, '#78716c');
+ ctx.fillStyle = bankGrad;
+ ctx.beginPath();
+ ctx.moveTo(0, bankTopY + 18);
+ ctx.quadraticCurveTo(width * 0.3, bankTopY - 12, width * 0.55, bankTopY + 10);
+ ctx.quadraticCurveTo(width * 0.8, bankTopY + 28, width, bankTopY + 42);
+ ctx.lineTo(width, waterStartY + 30);
+ ctx.lineTo(0, waterStartY + 30);
+ ctx.closePath();
+ ctx.fill();
+
+ // Shingle Stones & Native Tussock Grass Tufts
+ state.shingleStones.forEach(st => {
+ const sx = st.rx * width;
+ const sy = bankTopY + 15 + st.ry * (waterStartY - bankTopY - 10);
+ ctx.fillStyle = st.color;
+ ctx.beginPath();
+ ctx.ellipse(sx, sy, st.size, st.size * 0.65, st.rot, 0, Math.PI * 2);
+ ctx.fill();
+ });
+
+ // Golden Tussock Grass Clumps
+ drawTussock(width * 0.14, bankTopY + 32);
+ drawTussock(width * 0.24, bankTopY + 24);
+ drawTussock(width * 0.72, bankTopY + 46);
+ drawTussock(width * 0.85, bankTopY + 54);
+
+ // 4. River-to-Sea Water Zone (Left = Braided Freshwater River, Right = Coastal Ocean)
+ const waterGrad = ctx.createLinearGradient(0, waterStartY, width, height);
+ waterGrad.addColorStop(0, '#0ea5e9'); // Braided River Turquoise
+ waterGrad.addColorStop(0.48, '#0284c7'); // Estuary Transition
+ waterGrad.addColorStop(1, '#0c4a6e'); // Deep Coastal Sea
+ ctx.fillStyle = waterGrad;
+ ctx.fillRect(0, waterStartY, width, height - waterStartY);
+
+ // Animated Flowing Water Ripples
+ ctx.strokeStyle = 'rgba(224, 242, 254, 0.35)';
+ ctx.lineWidth = 2.5;
+ for (let row = 0; row < 6; row++) {
+ const wy = waterStartY + 22 + row * ((height - waterStartY) / 6);
+ ctx.beginPath();
+ for (let wx = 0; wx <= width; wx += 35) {
+ const offset = Math.sin(wx * 0.02 + state.waveTime * 2.4 + row) * 5;
+ if (wx === 0) ctx.moveTo(wx, wy + offset);
+ else ctx.lineTo(wx, wy + offset);
+ }
+ ctx.stroke();
+ }
+
+ // Subtle Zone Labels in Water (Educational Signposting)
+ ctx.font = '800 13px Nunito, sans-serif';
+ ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+ ctx.textAlign = 'left';
+ ctx.fillText('🏔️ BRAIDED RIVER (AWA)', 18, height - 16);
+ ctx.textAlign = 'right';
+ ctx.fillText('🌊 COASTAL SEA (MOANA)', width - 18, height - 16);
+ }
+
+ function drawCloud(x, y, scale) {
+ ctx.save();
+ ctx.translate(x, y);
+ ctx.scale(scale, scale);
+ ctx.beginPath();
+ ctx.arc(0, 0, 22, 0, Math.PI * 2);
+ ctx.arc(20, -6, 26, 0, Math.PI * 2);
+ ctx.arc(44, 0, 20, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.restore();
+ }
+
+ function drawTussock(x, y) {
+ ctx.save();
+ ctx.translate(x, y);
+ ctx.strokeStyle = '#ca8a04';
+ ctx.lineWidth = 2.5;
+ for (let i = -3; i <= 3; i++) {
+ ctx.beginPath();
+ ctx.moveTo(0, 0);
+ ctx.quadraticCurveTo(i * 4, -14, i * 8, -22 + Math.abs(i) * 2);
+ ctx.stroke();
+ }
+ ctx.restore();
+ }
+
+ function drawNestAndChicks(dt) {
+ const { x, y, radius } = state.nest;
+ if (state.nest.chickBounce > 0) {
+ state.nest.chickBounce = Math.max(0, state.nest.chickBounce - dt * 2.5);
+ }
+ const bounceY = Math.sin(state.nest.chickBounce * Math.PI) * -10;
+
+ // Highlight Ring when dragging food near nest
+ if (state.draggedEntity) {
+ const dist = Math.hypot(state.draggedEntity.x - x, state.draggedEntity.y - y);
+ const isClose = dist <= radius + 45;
+ ctx.save();
+ ctx.beginPath();
+ ctx.arc(x, y, radius + 16 + Math.sin(state.waveTime * 8) * 4, 0, Math.PI * 2);
+ ctx.strokeStyle = isClose ? '#34d399' : 'rgba(255, 255, 255, 0.75)';
+ ctx.lineWidth = isClose ? 5 : 3;
+ ctx.setLineDash([8, 6]);
+ ctx.stroke();
+ ctx.restore();
+ }
+
+ // Shingle Scrape Nest Rim (Twigs & Stones)
+ ctx.fillStyle = '#78350f';
+ ctx.beginPath();
+ ctx.ellipse(x, y + 8, radius, radius * 0.45, 0, 0, Math.PI * 2);
+ ctx.fill();
+
+ ctx.fillStyle = '#a16207';
+ ctx.beginPath();
+ ctx.ellipse(x, y + 5, radius * 0.85, radius * 0.35, 0, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Two Fluffy Speckled Tarapirohe Chicks
+ drawChick(x - 20, y - 4 + bounceY, 0.95);
+ drawChick(x + 20, y - 2 + bounceY * 0.8, 0.9);
+
+ // Nest Tag
+ ctx.font = '800 12px Fredoka, sans-serif';
+ ctx.textAlign = 'center';
+ ctx.fillStyle = '#fef3c7';
+ ctx.fillText('DROP FOOD AT NEST', x, y + radius * 0.45 + 22);
+ }
+
+ function drawChick(cx, cy, scale) {
+ ctx.save();
+ ctx.translate(cx, cy);
+ ctx.scale(scale, scale);
+
+ // Fluffy grey-brown speckled body
+ ctx.fillStyle = '#d6d3d1';
+ ctx.beginPath();
+ ctx.arc(0, 4, 15, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Head
+ ctx.beginPath();
+ ctx.arc(0, -10, 11, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Camouflage speckles
+ ctx.fillStyle = '#57534e';
+ ctx.beginPath();
+ ctx.arc(-5, -13, 2, 0, Math.PI * 2);
+ ctx.arc(4, -12, 2.2, 0, Math.PI * 2);
+ ctx.arc(-6, 3, 2.5, 0, Math.PI * 2);
+ ctx.arc(5, 5, 2.5, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Eye
+ ctx.fillStyle = '#0f172a';
+ ctx.beginPath();
+ ctx.arc(4, -11, 2.2, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Open hungry beak (opens wider when hunger is low or food dragged!)
+ const mouthOpen = (state.hunger < 65 || state.draggedEntity) ? 5 : 2;
+ ctx.fillStyle = '#f97316';
+ ctx.beginPath();
+ ctx.moveTo(10, -11);
+ ctx.lineTo(19, -13 - mouthOpen * 0.4);
+ ctx.lineTo(11, -9);
+ ctx.closePath();
+ ctx.fill();
+
+ ctx.beginPath();
+ ctx.moveTo(10, -9);
+ ctx.lineTo(18, -7 + mouthOpen * 0.5);
+ ctx.lineTo(10, -7);
+ ctx.closePath();
+ ctx.fill();
+
+ ctx.restore();
+ }
+
+ function drawTarapiroheAdult(dt) {
+ const bird = state.ternBird;
+ bird.wingPhase += dt * 11;
+
+ // Smooth flight toward target
+ const dx = bird.targetX - bird.x;
+ const dy = bird.targetY - bird.y;
+ bird.x += dx * Math.min(1, dt * 6.5);
+ bird.y += dy * Math.min(1, dt * 6.5);
+ if (Math.abs(dx) > 2) bird.facing = dx > 0 ? 1 : -1;
+
+ ctx.save();
+ ctx.translate(bird.x, bird.y);
+ ctx.scale(bird.facing, 1);
+
+ const wingFlap = Math.sin(bird.wingPhase) * 14;
+
+ // Back Wing
+ ctx.fillStyle = '#94a3b8';
+ ctx.beginPath();
+ ctx.moveTo(-4, -2);
+ ctx.quadraticCurveTo(-18, -24 - wingFlap * 0.6, -30, -10 - wingFlap);
+ ctx.lineTo(-10, 2);
+ ctx.closePath();
+ ctx.fill();
+
+ // Forked Tail
+ ctx.fillStyle = '#f8fafc';
+ ctx.beginPath();
+ ctx.moveTo(-18, 2);
+ ctx.lineTo(-36, -4);
+ ctx.lineTo(-28, 3);
+ ctx.lineTo(-36, 9);
+ ctx.closePath();
+ ctx.fill();
+
+ // Ash-Grey Streamlined Body
+ ctx.fillStyle = '#cbd5e1';
+ ctx.beginPath();
+ ctx.ellipse(0, 2, 22, 9, -0.08, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Iconic Black Cap (Tarapirohe / Black-fronted Tern)
+ ctx.fillStyle = '#0f172a';
+ ctx.beginPath();
+ ctx.arc(16, -4, 8.5, Math.PI, 0);
+ ctx.fill();
+
+ // White Cheek Stripe
+ ctx.fillStyle = '#ffffff';
+ ctx.beginPath();
+ ctx.ellipse(15, -1, 7, 3.5, 0, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Eye
+ ctx.fillStyle = '#0f172a';
+ ctx.beginPath();
+ ctx.arc(18, -4, 1.8, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Bright Orange-Red Bill
+ ctx.fillStyle = '#f97316';
+ ctx.beginPath();
+ ctx.moveTo(23, -4);
+ ctx.lineTo(36, -1);
+ ctx.lineTo(23, 1);
+ ctx.closePath();
+ ctx.fill();
+
+ // Front Wing
+ ctx.fillStyle = '#64748b';
+ ctx.beginPath();
+ ctx.moveTo(2, 0);
+ ctx.quadraticCurveTo(-12, -22 + wingFlap, -26, -6 + wingFlap * 1.2);
+ ctx.lineTo(-8, 4);
+ ctx.closePath();
+ ctx.fill();
+
+ ctx.restore();
+ }
+
+ function drawEntity(ent) {
+ const bob = ent.isDragging ? 0 : Math.sin(state.waveTime * 4 + ent.bobOffset) * 3.5;
+ const scale = ent.isDragging ? 1.22 : 1.0;
+
+ ctx.save();
+ ctx.translate(ent.x, ent.y + bob);
+ ctx.scale(scale, scale);
+
+ // Soft Glow Ring so visitors easily spot interactive items
+ ctx.fillStyle = ent.isFood ? 'rgba(255, 255, 255, 0.28)' : 'rgba(254, 202, 202, 0.35)';
+ ctx.beginPath();
+ ctx.arc(0, 0, ent.radius + 4, 0, Math.PI * 2);
+ ctx.fill();
+
+ // Flip horizontally based on swim direction
+ const dir = ent.vx >= 0 ? 1 : -1;
+ ctx.scale(dir, 1);
+
+ // Custom Vector Drawing per Species
+ if (ent.id === 'whitebait' || ent.id === 'smelt') {
+ // Silvery Native Fish
+ ctx.fillStyle = ent.color;
+ ctx.beginPath();
+ ctx.ellipse(0, 0, 18, 7, 0, 0, Math.PI * 2);
+ ctx.fill();
+ // Tail
+ ctx.beginPath();
+ ctx.moveTo(-16, 0);
+ ctx.lineTo(-25, -7);
+ ctx.lineTo(-25, 7);
+ ctx.closePath();
+ ctx.fill();
+ // Eye
+ ctx.fillStyle = '#0f172a';
+ ctx.beginPath();
+ ctx.arc(11, -2, 2, 0, Math.PI * 2);
+ ctx.fill();
+ } else if (ent.id === 'mayfly' || ent.id === 'caddisfly') {
+ // Aquatic Insect with Wings
+ ctx.fillStyle = 'rgba(255,255,255,0.85)';
+ ctx.beginPath();
+ ctx.ellipse(-2, -9, 9, 5, -0.4, 0, Math.PI * 2);
+ ctx.ellipse(4, -8, 8, 4, 0.3, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.fillStyle = ent.color;
+ ctx.beginPath();
+ ctx.ellipse(0, 2, 13, 4.5, 0, 0, Math.PI * 2);
+ ctx.fill();
+ } else if (ent.id === 'earthworm') {
+ // Wriggly Pink Earthworm
+ ctx.strokeStyle = '#f472b6';
+ ctx.lineWidth = 6;
+ ctx.lineCap = 'round';
+ ctx.beginPath();
+ ctx.moveTo(-15, 3);
+ ctx.quadraticCurveTo(-5, -8, 4, 3);
+ ctx.quadraticCurveTo(11, 10, 17, -2);
+ ctx.stroke();
+ } else if (ent.id === 'skink') {
+ // Native Skink Lizard
+ ctx.fillStyle = '#854d0e';
+ ctx.beginPath();
+ ctx.ellipse(2, 0, 14, 5.5, 0, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.strokeStyle = '#854d0e';
+ ctx.lineWidth = 3;
+ ctx.beginPath();
+ ctx.moveTo(-11, 0);
+ ctx.quadraticCurveTo(-20, -6, -25, 2);
+ ctx.stroke();
+ } else if (ent.id === 'krill') {
+ // Pink Coastal Krill
+ ctx.fillStyle = '#fb7185';
+ ctx.beginPath();
+ ctx.arc(0, 2, 11, Math.PI, 0);
+ ctx.lineWidth = 5;
+ ctx.strokeStyle = '#fb7185';
+ ctx.stroke();
+ ctx.fillStyle = '#0f172a';
+ ctx.beginPath();
+ ctx.arc(9, -1, 1.8, 0, Math.PI * 2);
+ ctx.fill();
+ } else if (ent.id === 'plastic') {
+ // Red Plastic Bottle Cap Hazard
+ ctx.fillStyle = '#ef4444';
+ ctx.beginPath();
+ ctx.roundRect(-13, -10, 26, 20, 5);
+ ctx.fill();
+ ctx.strokeStyle = '#ffffff';
+ ctx.lineWidth = 2;
+ ctx.strokeRect(-9, -6, 18, 12);
+ } else if (ent.id === 'stoat') {
+ // Predator Stoat
+ ctx.fillStyle = '#78350f';
+ ctx.beginPath();
+ ctx.ellipse(0, 2, 18, 8, 0, 0, Math.PI * 2);
+ ctx.fill();
+ // Black tail tip
+ ctx.fillStyle = '#0f172a';
+ ctx.beginPath();
+ ctx.arc(-20, 0, 4.5, 0, Math.PI * 2);
+ ctx.fill();
+ // Fierce eye
+ ctx.fillStyle = '#fef08a';
+ ctx.beginPath();
+ ctx.arc(11, -1, 2.2, 0, Math.PI * 2);
+ ctx.fill();
+ } else if (ent.id === 'puffer') {
+ // Spiky Pufferfish Hazard
+ ctx.fillStyle = '#f97316';
+ ctx.beginPath();
+ ctx.arc(0, 0, 15, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.strokeStyle = '#fed7aa';
+ ctx.lineWidth = 2.5;
+ for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+ ctx.beginPath();
+ ctx.moveTo(Math.cos(a) * 14, Math.sin(a) * 14);
+ ctx.lineTo(Math.cos(a) * 20, Math.sin(a) * 20);
+ ctx.stroke();
+ }
+ }
+
+ ctx.restore();
+
+ // Clean Name Tag below entity
+ ctx.save();
+ ctx.font = '800 11px Nunito, sans-serif';
+ ctx.textAlign = 'center';
+ const label = ent.name.split(' (')[0];
+ const textW = ctx.measureText(label).width + 12;
+ ctx.fillStyle = ent.isFood ? 'rgba(15, 23, 42, 0.72)' : 'rgba(159, 18, 57, 0.88)';
+ ctx.beginPath();
+ ctx.roundRect(ent.x - textW / 2, ent.y + bob + ent.radius + 2, textW, 17, 8);
+ ctx.fill();
+
+ ctx.fillStyle = '#ffffff';
+ ctx.fillText(label, ent.x, ent.y + bob + ent.radius + 14);
+ ctx.restore();
+ }
+
+ function drawPopupsAndParticles(dt) {
+ // Particles
+ for (let i = state.particles.length - 1; i >= 0; i--) {
+ const p = state.particles[i];
+ p.x += p.vx * dt;
+ p.y += p.vy * dt;
+ p.life -= dt;
+ if (p.life <= 0) {
+ state.particles.splice(i, 1);
+ continue;
+ }
+ ctx.save();
+ ctx.globalAlpha = Math.max(0, p.life / 0.65);
+ ctx.fillStyle = p.color;
+ ctx.beginPath();
+ ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.restore();
+ }
+
+ // Educational Popups
+ for (let i = state.floatingPopups.length - 1; i >= 0; i--) {
+ const pop = state.floatingPopups[i];
+ pop.y -= 18 * dt;
+ pop.life -= dt;
+ if (pop.life <= 0) {
+ state.floatingPopups.splice(i, 1);
+ continue;
+ }
+
+ ctx.save();
+ ctx.globalAlpha = Math.min(1, pop.life * 1.5);
+ ctx.font = '800 15px Fredoka, sans-serif';
+ const titleW = ctx.measureText(pop.title).width;
+ ctx.font = '700 12px Nunito, sans-serif';
+ const subW = ctx.measureText(pop.subtitle).width;
+ const boxW = Math.min(width - 24, Math.max(titleW, subW) + 28);
+ const boxH = 48;
+
+ ctx.fillStyle = pop.isGood ? 'rgba(6, 78, 59, 0.94)' : 'rgba(136, 19, 55, 0.94)';
+ ctx.strokeStyle = pop.isGood ? '#6ee7b7' : '#fda4af';
+ ctx.lineWidth = 2.5;
+ ctx.beginPath();
+ ctx.roundRect(pop.x - boxW / 2, pop.y - boxH / 2, boxW, boxH, 14);
+ ctx.fill();
+ ctx.stroke();
+
+ ctx.textAlign = 'center';
+ ctx.fillStyle = pop.isGood ? '#a7f3d0' : '#fecdd3';
+ ctx.font = '800 15px Fredoka, sans-serif';
+ ctx.fillText(pop.title, pop.x, pop.y - 4);
+
+ ctx.fillStyle = '#ffffff';
+ ctx.font = '700 11.5px Nunito, sans-serif';
+ ctx.fillText(pop.subtitle, pop.x, pop.y + 14);
+ ctx.restore();
+ }
+ }
+
+ // ==========================================
+ // 7. MAIN GAME LOOP & UI UPDATES
+ // ==========================================
+ function updateHud() {
+ document.getElementById('hudScore').textContent = state.score;
+ document.getElementById('hudTimer').textContent = `${Math.ceil(state.timeLeft)}s`;
+
+ const hungerVal = Math.max(0, Math.round(state.hunger));
+ document.getElementById('hungerPercentText').textContent = `${hungerVal}%`;
+ const bar = document.getElementById('hungerBar');
+ bar.style.width = `${hungerVal}%`;
+
+ if (hungerVal > 50) {
+ bar.className = 'h-full bg-gradient-to-r from-emerald-400 to-lime-500 rounded-full transition-all duration-200';
+ } else if (hungerVal > 25) {
+ bar.className = 'h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-200';
+ } else {
+ bar.className = 'h-full bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-all duration-200';
+ }
+ }
+
+ function startGame() {
+ const rawName = document.getElementById('playerNameInput').value.trim();
+ state.playerName = rawName.length > 0 ? rawName : 'Junior Ranger';
+
+ state.mode = 'PLAYING';
+ state.score = 0;
+ state.timeLeft = 60;
+ state.hunger = 100;
+ state.entities = [];
+ state.particles = [];
+ state.floatingPopups = [];
+ state.eatenCounts = {};
+ state.draggedEntity = null;
+
+ // Pre-populate 5 items right away so the river & sea look alive
+ for (let i = 0; i < 5; i++) {
+ spawnEntity();
+ state.entities[i].x = width * (0.15 + i * 0.17);
+ }
+
+ document.getElementById('hudPlayerName').textContent = `🦅 ${state.playerName}`;
+ document.getElementById('openingScreen').classList.add('hidden');
+ document.getElementById('endScreen').classList.add('hidden');
+ document.getElementById('endScreen').classList.remove('flex');
+ document.getElementById('gameHud').classList.remove('hidden');
+
+ sfx.init();
+ sfx.playFeedChirp();
+ updateHud();
+ }
+
+ function endGame(survived) {
+ state.mode = 'ENDED';
+ state.draggedEntity = null;
+
+ document.getElementById('gameHud').classList.add('hidden');
+ const endScreen = document.getElementById('endScreen');
+ endScreen.classList.remove('hidden');
+ endScreen.classList.add('flex');
+
+ const totalEaten = Object.values(state.eatenCounts).reduce((a, b) => a + b, 0);
+ document.getElementById('finalScore').textContent = state.score;
+ document.getElementById('finalCount').textContent = totalEaten;
+
+ const badge = document.getElementById('endBadge');
+ const title = document.getElementById('endTitle');
+ const subtitle = document.getElementById('endSubtitle');
+
+ if (survived) {
+ badge.textContent = '🌟 RIVER-TO-SEA GUARDIAN!';
+ badge.className = 'inline-block mx-auto bg-emerald-100 text-emerald-800 font-extrabold px-4 py-1 rounded-full text-xs sm:text-sm mb-2 border border-emerald-300';
+ title.textContent = `Ka pai, ${state.playerName}!`;
+ subtitle.textContent = 'You protected the Tarapirohe chicks and mastered the river-to-sea food web!';
+ } else {
+ badge.textContent = '🐣 CHICKS GOT TOO HUNGRY!';
+ badge.className = 'inline-block mx-auto bg-amber-100 text-amber-800 font-extrabold px-4 py-1 rounded-full text-xs sm:text-sm mb-2 border border-amber-300';
+ title.textContent = `Nice try, ${state.playerName}!`;
+ subtitle.textContent = 'Keep feeding the chicks native insects, fish, and krill to keep their survival bar up!';
+ }
+
+ // Build Diet Summary List
+ const summaryList = document.getElementById('dietSummaryList');
+ summaryList.innerHTML = '';
+
+ const entries = Object.entries(state.eatenCounts);
+ if (entries.length === 0) {
+ summaryList.innerHTML = `<p class="text-slate-500 italic">No prey delivered yet—drag river insects, whitebait, and ocean krill up to the nest next round!</p>`;
+ } else {
+ entries.forEach(([speciesName, count]) => {
+ const specObj = SPECIES_CATALOG.find(s => s.name === speciesName);
+ const row = document.createElement('div');
+ row.className = 'flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-amber-200 shadow-xs';
+ row.innerHTML = `
+ <div>
+ <span class="text-emerald-700 font-extrabold">${speciesName}</span>
+ <div class="text-xs text-slate-500 font-semibold">${specObj ? specObj.fact : ''}</div>
+ </div>
+ <span class="bg-emerald-100 text-emerald-800 font-display font-bold px-2.5 py-1 rounded-lg text-sm shrink-0 ml-2">
+ ×${count}
+ </span>
+ `;
+ summaryList.appendChild(row);
+ });
+ }
+ }
+
+ let lastFrameTime = performance.now();
+
+ function gameLoop(now) {
+ const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+ lastFrameTime = now;
+
+ // Always render the living braided-river-to-sea scene (acts as Opening Page backdrop too!)
+ drawHabitatBackground(dt);
+ drawNestAndChicks(dt);
+
+ if (state.mode === 'OPENING') {
+ // Gentle ambient patrol flight on Opening Page
+ state.ternBird.targetX = width * 0.5 + Math.cos(state.waveTime * 0.8) * (width * 0.25);
+ state.ternBird.targetY = height * 0.16 + Math.sin(state.waveTime * 1.6) * 18;
+ drawTarapiroheAdult(dt);
+ } else if (state.mode === 'PLAYING') {
+ // Countdown timer & gradual chick hunger drain
+ state.timeLeft -= dt;
+ state.hunger -= dt * 2.15; // Balanced survival pressure
+
+ if (state.hunger <= 0) {
+ state.hunger = 0;
+ updateHud();
+ endGame(false);
+ } else if (state.timeLeft <= 0) {
+ state.timeLeft = 0;
+ updateHud();
+ endGame(true);
+ } else {
+ // Spawn new river/ocean creatures periodically
+ if (now - state.lastSpawnTime > 1350) {
+ spawnEntity();
+ state.lastSpawnTime = now;
+ }
+
+ // Update & draw swimming/crawling creatures
+ for (let i = state.entities.length - 1; i >= 0; i--) {
+ const ent = state.entities[i];
+ if (!ent.isDragging) {
+ ent.x += ent.vx * dt;
+ if ((ent.vx > 0 && ent.x > width + 60) || (ent.vx < 0 && ent.x < -60)) {
+ state.entities.splice(i, 1);
+ continue;
+ }
+ }
+ drawEntity(ent);
+ }
+
+ drawTarapiroheAdult(dt);
+ drawPopupsAndParticles(dt);
+ updateHud();
+ }
+ }
+
+ requestAnimationFrame(gameLoop);
+ }
+
+ // ==========================================
+ // 8. BUTTON EVENT LISTENERS
+ // ==========================================
+ document.getElementById('startBtn').addEventListener('click', startGame);
+ document.getElementById('playAgainBtn').addEventListener('click', startGame);
+ document.getElementById('muteBtn').addEventListener('click', () => sfx.toggleMute());
+
+ // Allow pressing Enter inside NAME input to start
+ document.getElementById('playerNameInput').addEventListener('keydown', (e) => {
+ if (e.key === 'Enter') startGame();
+ });
+
+ // Launch animation loop
+ requestAnimationFrame(gameLoop);
+ </script>
+</body>
+</html>
